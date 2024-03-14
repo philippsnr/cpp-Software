@@ -1,10 +1,20 @@
+// Erstellen des Programm
+// mkdir build
+// cd build
+// cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..
+// ninja
+// Alternativ diesen Ordner mit VSCode oeffnen
+// #include <config.h>
+// #include <pathtest.h>
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <jsoncpp/json/json.h>
-
 using namespace std;
+
 namespace fs = std::filesystem;
+
+#include <jsoncpp/json/json.h>
 
 class Entry
 {
@@ -13,6 +23,10 @@ public:
     Entry(string _type) : type(_type) {}
 
     virtual string getBatchCommand()
+    {
+        return "";
+    }
+    virtual string getData()
     {
         return "";
     }
@@ -32,6 +46,10 @@ public:
     {
         return "";
     }
+    string getData()
+    {
+        return key + " , value: " + value;
+    }
 };
 
 class EXE : public Entry
@@ -46,6 +64,10 @@ public:
     string getBatchCommand()
     {
         return "";
+    }
+    string getData()
+    {
+        return command;
     }
 };
 
@@ -62,6 +84,10 @@ public:
     {
         return "";
     }
+    string getData()
+    {
+        return path;
+    }
 };
 
 int JsonReader()
@@ -69,12 +95,11 @@ int JsonReader()
     // Variablen für Werte aus der JSON-Datei
     string outputfile;
     bool hideshell;
-    string application;
+    string application_path;
+    string application_name;
 
     // Vector für Einträge aus entries
-    vector<EXE> entries_exe;
-    vector<ENV> entries_env;
-    vector<PATH> entries_path;
+    vector<Entry *> entries;
 
     // JSON-Datei öffnen
     ifstream file("sample.json");
@@ -85,66 +110,99 @@ int JsonReader()
     if (!reader.parse(file, root))
     {
         cerr << "Error while parsing the JSON-file" << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
-
     // Werte aus JSON lesen
     outputfile = root["outputfile"].asString();
+    if (outputfile.find(".bat") == 0)
+    {
+        cerr << "Error with outputfilename. (LINE 2) \n Has to have '.bat'. Use -h for more Information" << '\n';
+        return EXIT_FAILURE;
+    }
+    string hideshell_error_check = root["hideshell"].asString();
+    /*if (hideshell_error_check != "false" || hideshell_error_check != "true")
+    {
+        cerr << "Error with variable hideshell: Wrong Value. (LINE ) \n Use -h for Help" << '\n';
+        return EXIT_FAILURE;
+    }
+    */
     hideshell = root["hideshell"].asBool();
-    application = root["application"].asString();
+    application_path = root["application"].asString();
+
+    // Name der Applikation rausfinden
+    int index = application_path.rfind(92); /* 92 (ASCII) = \ */
+    int length = application_path.length();
+    application_name = application_path.substr(index + 1, length - index);
 
     // Einträge aus JSON lesen
+    int line = 4;
     const Json::Value entries_json = root["entries"];
     if (entries_json.isArray())
     {
         for (const Json::Value entry_json : entries_json)
         {
+            line++;
             string type = entry_json["type"].asString();
             if (type == "EXE")
             {
                 string command = entry_json["command"].asString();
-                entries_exe.push_back(EXE(command));
+                entries.push_back(new EXE(command));
             }
             else if (type == "ENV")
             {
                 string key = entry_json["key"].asString();
                 string value = entry_json["value"].asString();
+                entries.push_back(new ENV(key, value));
             }
             else if (type == "PATH")
             {
                 string path = entry_json["path"].asString();
-                entries_path.push_back(PATH(path));
+                entries.push_back(new PATH(path));
             }
             else
             {
-                cerr << "Unknown type: " << type << endl;
-                return 1;
+                cerr << "Unknown type: " << type << ". (LINE " << line << ") \n Use -h for Help" << '\n';
+                return EXIT_FAILURE;
             }
         }
     }
     else
     {
-        cerr << "" << endl;
-        return 1;
+        cerr << "Error for entries: Not an Array. (LINE 4) \n Use -h for Help" << endl;
+        return EXIT_FAILURE;
     }
-
+    /*xists(application_path) == 0)
+    {
+        cerr << "Error with application path: Doesn't Exist. (LINE " << line + 2 << ") \n Use -h for Help" << '\n';
+        return EXIT_FAILURE;
+    }
+    */
     // Ausgabe der gespeicherten Informationen
     cout << "outputfile: " << outputfile << endl;
     cout << "hideshell: " << hideshell << endl;
-    cout << "application: " << application << endl;
+    cout << "application: " << application_name << " path: " << application_path << endl;
     cout << "entries:" << endl;
-    for (const auto exe : entries_exe)
+    for (const auto entry : entries)
     {
-        cout << "  type: EXE, command: " << exe.command << endl;
+        if (entry->type == "EXE")
+        {
+            cout << "  type: EXE, command: " << entry->getData() << endl;
+        }
+        else if (entry->type == "ENV")
+        {
+            cout << "  type: ENV, key: " << entry->getData() << endl;
+        }
+        else if (entry->type == "PATH")
+        {
+            cout << "  type: PATH, path: " << entry->getData() << endl;
+        }
+        else
+        {
+            cerr << "Unknown type: " << entry->type << ". (LINE " << line << ") \n Use -h for Help" << '\n';
+            return EXIT_FAILURE;
+        }   
     }
-    for (const auto env : entries_env)
-    {
-        cout << "  type: EXE, command: " << env.key << "value: " << env.value << endl;
-    }
-    for (const auto path : entries_path)
-    {
-        cout << "  type: PATH, path: " << path.path << endl;
-    }  
+    return 0;
 }
 
 int main()
