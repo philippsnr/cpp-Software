@@ -41,10 +41,9 @@ public:
         key = _key;
         value = _value;
     }
-
     string getBatchCommand()
     {
-        return "";
+        return "set " + key + "=" + value;
     }
     string getData()
     {
@@ -63,7 +62,7 @@ public:
 
     string getBatchCommand()
     {
-        return "";
+        return command;
     }
     string getData()
     {
@@ -79,10 +78,9 @@ public:
     {
         path = _path;
     }
-
     string getBatchCommand()
     {
-        return "";
+        return path;
     }
     string getData()
     {
@@ -177,14 +175,71 @@ int JsonReader()
         return EXIT_FAILURE;
     }
     */
+
+    // Überprüfen, ob die Datei erfolgreich geöffnet wurde
+
+    // MakeBatch();
+    ofstream batchFile(outputfile);
+
+    if (!batchFile.is_open())
+    {
+        cerr << "Fehler beim Öffnen der Datei!" << endl;
+        return 1;
+    }
+    if (hideshell == 0)
+    {
+        batchFile << "@echo on" << endl;
+    }
+    else
+    {
+        batchFile << "@echo off" << endl;
+    }
+
+    for (const auto entry : entries)
+    {
+        if(entry->type == "EXE")
+        {
+            batchFile << entry->getBatchCommand() << " && ";
+        }   
+    }
+    for (const auto entry : entries)
+    {
+        if(entry->type == "ENV")
+        {
+            batchFile << entry->getBatchCommand() << " && ";
+        } 
+    }
+    batchFile << "set path=";
+    for (const auto entry : entries)
+    {
+        if(entry->type == "PATH")
+        {
+            batchFile << entry->getBatchCommand() << ";";
+        }
+    }
+    batchFile << "%PATH%";
+
+
+    // Datei schließen
+    batchFile.close();
+    // Iteriere über den Vektor und lösche die Objekte
+    for (auto entry : entries)
+    {
+        delete entry;
+    }
+    // Lösche alle Einträge im Vektor
+    entries.clear();
+    return EXIT_SUCCESS;
+}
+
+/*
     // Ausgabe der gespeicherten Informationen
     cout << "outputfile: " << outputfile << endl;
     cout << "hideshell: " << hideshell << endl;
     cout << "application: " << application_name << " path: " << application_path << endl;
     cout << "entries:" << endl;
-    for (const auto entry : entries)
-    {
-        if (entry->type == "EXE")
+
+if (entry->type == "EXE")
         {
             cout << "  type: EXE, command: " << entry->getData() << endl;
         }
@@ -200,13 +255,13 @@ int JsonReader()
         {
             cerr << "Unknown type: " << entry->type << ". (LINE " << line << ") \n Use -h for Help" << '\n';
             return EXIT_FAILURE;
-        }   
-    }
-    return 0;
-}
+        }
+        cout << "BatchCommand: " << entry->getBatchCommand() << endl;
+        */
 
 int main()
 {
     JsonReader();
-    return 0;
+    // MakeBatch();
+    return EXIT_SUCCESS;
 }
