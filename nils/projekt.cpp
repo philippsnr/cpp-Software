@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <getopt.h>
 using namespace std;
 
 namespace fs = std::filesystem;
@@ -50,7 +51,6 @@ public:
         return key + " , value: " + value;
     }
 };
-
 class EXE : public Entry
 {
 public:
@@ -69,7 +69,6 @@ public:
         return command;
     }
 };
-
 class PATH : public Entry
 {
 public:
@@ -88,7 +87,7 @@ public:
     }
 };
 
-int JsonReader()
+int JsonReader(fs::path filePath)
 {
     // Variablen für Werte aus der JSON-Datei
     string outputfile;
@@ -100,7 +99,7 @@ int JsonReader()
     vector<Entry *> entries;
 
     // JSON-Datei öffnen
-    ifstream file("sample.json");
+    ifstream file(filePath);
     Json::Reader reader;
     Json::Value root;
 
@@ -178,7 +177,7 @@ int JsonReader()
 
     // Überprüfen, ob die Datei erfolgreich geöffnet wurde
 
-    // MakeBatch();
+    //MakeBatch();
     ofstream batchFile(outputfile);
 
     if (!batchFile.is_open())
@@ -188,11 +187,11 @@ int JsonReader()
     }
     if (hideshell == 0)
     {
-        batchFile << "@echo on" << endl;
+        batchFile << "@echo on\r\n";
     }
     else
     {
-        batchFile << "@echo off" << endl;
+        batchFile << "@echo off\r\n";
     }
 
     for (const auto entry : entries)
@@ -217,7 +216,7 @@ int JsonReader()
             batchFile << entry->getBatchCommand() << ";";
         }
     }
-    batchFile << "%PATH%";
+    batchFile << "%PATH%\r\n";
 
 
     // Datei schließen
@@ -229,6 +228,7 @@ int JsonReader()
     }
     // Lösche alle Einträge im Vektor
     entries.clear();
+    cout << "outputfile: " << outputfile << endl;
     return EXIT_SUCCESS;
 }
 
@@ -246,7 +246,8 @@ if (entry->type == "EXE")
         else if (entry->type == "ENV")
         {
             cout << "  type: ENV, key: " << entry->getData() << endl;
-        }
+        }build/test.json
+        /home/nils/Schreibtisch/jsoncpp/build/test.json
         else if (entry->type == "PATH")
         {
             cout << "  type: PATH, path: " << entry->getData() << endl;
@@ -259,9 +260,43 @@ if (entry->type == "EXE")
         cout << "BatchCommand: " << entry->getBatchCommand() << endl;
         */
 
-int main()
+int main(int argc, char *argv[])
 {
-    JsonReader();
-    // MakeBatch();
+    int opt;
+    int option_index = 0;
+    int correct_input = 0;
+    int aksforhelp=0;
+    struct option long_options[] = {
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}};
+    while ((opt = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
+    {
+        switch (opt)
+        {
+        case 'h':
+            cout << "How to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./getopttest /Path/To/Your/File.json\nProgramm developed by:\nNils Fleschhut (fleschhut.nils@gmail.com) \nLinus Gerlach (li.gerlach@freenet.de) \nPhillip Staudinger (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum(janu10.jn@gmail.com) "
+                 << "\n";
+                 aksforhelp=1;
+            break;
+        default:
+            cout << "-h or --help for help\n";
+            break;
+        }
+    }
+    for (int i = 1; i < argc; i++)
+    {
+        if (fs::exists(argv[i]))
+        {
+            string eingabe = argv[i];
+            fs::path filePath = fs::canonical(eingabe);
+            cout << eingabe << "Input detected. Initiating the parsing \n";
+            JsonReader(filePath);
+            correct_input = 1;
+        }
+    }
+    if (correct_input == 0 && aksforhelp == 0)
+    {
+        cout << "no fitting input detectet. -h or --help for further explenation\n";
+    }
     return EXIT_SUCCESS;
 }
