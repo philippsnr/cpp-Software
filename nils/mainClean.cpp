@@ -105,50 +105,64 @@ int JsonReader(fs::path filePath)
     }
 
     // Werte aus JSON lesen
-    //Outputfile überprüfen
+    // Outputfile überprüfen
     string outputfile = root["outputfile"].asString();
-    if (outputfile.find(".bat") == 0)
+    const string outputfileSUB = outputfile.substr(outputfile.length() - 4);
+    if (!(outputfile.length() >= 4 && outputfileSUB == ".bat"))
     {
-        int choice = 0;
-        cout << "Error with outputfilename. (LINE 2) \n Has to have '.bat'. Use -h for more Information" << '\n';
-        do{
-        cout << "Do you want us to add \".bat\" or exit the program ?" << '\n';
-        cout << "Type \"1\" for adding \".bat\" or type \"2\" for exit" << '\n';
-        cout << "Your choice: ";
-        cin >> choice;
-        cout << endl;
-        }while(choice != 1 && choice != 2);
-        if (choice == 1)
+        string choice;
+        cout << "Error with outputfilename. (LINE X) \n Has to have '.bat'. Use -h for more Information" << '\n';
+        do
+        {
+            cout << "\n\nDo you want us to add \".bat\" or exit the program ?" << '\n';
+            cout << "Type \"1\" for adding \".bat\" or type \"2\" for exit" << '\n';
+            cout << "Your choice: ";
+            cin >> choice;
+            cout << endl;
+        } while (choice != "1" && choice != "2");
+        if (choice == "1")
         {
             cout << "We will add \".bat\" to your given outputfile \n";
             outputfile = outputfile.append(".bat");
         }
-        else 
+        else
         {
             return EXIT_FAILURE;
         }
     }
-    //hideshell überprüfen
-    const string hideshell_error_check = root["hideshell"].asString();
-    if (hideshell_error_check != "false" || hideshell_error_check != "true")
+    // Überprüfen ob Batch mit diesem Name schon existiert
+    if (fs::exists(outputfile))
+    {
+        string choice;
+        cout << "There is already a batch-file with this filename. Do you want to continue or exit?\n";
+        do
+        {
+            cout << "Type \"1\" for continue or type \"2\" for exit \n";
+            cout << "Your choice: ";
+            cin >> choice;
+        } while (choice != "1" && choice != "2");
+        if (choice == "2")
+        {
+            return EXIT_FAILURE;
+        }
+    }
+    //Req8 abgeschlossen
+    // hideshell überprüfen
+    if (root["hideshell"].isBool() == false)
     {
         cerr << "Error with variable hideshell: Wrong Value. (LINE ) \n Use -h for Help" << '\n';
         return EXIT_FAILURE;
     }
-
-    const bool hideshell = root["hideshell"].asBool();
+    const bool hideshell = root["hideshell"].asBool(); //Req9 abgeschlossen
     const string application_path = root["application"].asString();
-    if (application_path == "null" || application_path == "0")
+    if (application_path != "null" && application_path != "0")
     {
-
+        // Name der Applikation rausfinden
+        const int index = application_path.rfind(92); /* 92 (ASCII-Code) = \ */
+        const int length = application_path.length();
+        const string application_name = application_path.substr(index + 1, length - index);
     }
-    else
-    {
-    // Name der Applikation rausfinden
-    const int index = application_path.rfind(92); /* 92 (ASCII-Code) = \ */
-    const int length = application_path.length();
-    const string application_name = application_path.substr(index + 1, length - index);
-    }
+    //Req16 abgeschlossen
     // Einträge aus JSON lesen
     const Json::Value entries_json = root["entries"];
     if (entries_json.isArray())
@@ -174,7 +188,7 @@ int JsonReader(fs::path filePath)
             }
             else
             {
-                cerr << "Unknown type: " << type << ". (LINE X \n Use -h for Help" << '\n';
+                cerr << "Unknown type: " << type << " (LINE X) \n Use -h for Help" << '\n';
                 return EXIT_FAILURE;
             }
         }
@@ -184,7 +198,7 @@ int JsonReader(fs::path filePath)
         cerr << "Error: entries: Not an Array. \n Use -h for Help" << endl;
         return EXIT_FAILURE;
     }
-
+    //Req10-15 abgeschlossen
     // Überprüfen, ob die Datei erfolgreich geöffnet wurde
     ofstream batchFile(outputfile);
 
@@ -193,8 +207,8 @@ int JsonReader(fs::path filePath)
         cerr << "Error while opening the batch" << endl;
         return EXIT_FAILURE;
     }
-    batchFile << "@echo on\r\n";
-    batchFile << "C:\\Windows\\System32\\cmd.exe ";
+    batchFile << "@echo on\r\n"; //Req24
+    batchFile << "C:\\Windows\\System32\\cmd.exe "; //Req18 abgeschlossen
     if (hideshell == 0)
     {
         batchFile << "/k";
@@ -235,7 +249,8 @@ int JsonReader(fs::path filePath)
     {
         batchFile << "%PATH%";
     }
-    batchFile << "\" \r\n";
+    //Req20-23 abgeschlossen
+    batchFile << "\" \r\n"; //Req24
     batchFile << "@echo off";
     // Datei schließen
     batchFile.close();
@@ -265,8 +280,8 @@ int main(int argc, char *argv[])
         switch (opt)
         {
         case 'h':
-            cout << "How to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./getopttest /Path/To/Your/File.json\nProgramm developed by:\nNils Fleschhut (fleschhut.nils@gmail.com) \nLinus Gerlach (li.gerlach@freenet.de) \nPhillip Staudinger (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum(janu10.jn@gmail.com) "
-                 << "\n";
+            cout << "How to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\nProgramm developed by:\nNils Fleschhut, TIT23 (fleschhut.nils@gmail.com) \nLinus Gerlach, TIT23 (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23(philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum, TIT23(janu10.jn@gmail.com)"
+                 << "\n"; // Req1-3
             aksforhelp = 1;
             break;
         default:
@@ -282,10 +297,10 @@ int main(int argc, char *argv[])
             fs::path filePath = fs::canonical(eingabe);
             cout << eingabe << " as input detected. Initiating parsing \n\n\n";
             JsonReader(filePath);
-            correct_input = 1;
+            correct_input = 1; // Req 4-5 + 7
         }
     }
-    if (correct_input == 0 && aksforhelp == 0)
+    if (correct_input == 0 && aksforhelp == 0) // Req6
     {
         cout << "no fitting input detectet. -h or --help for further explanation\n";
     }
