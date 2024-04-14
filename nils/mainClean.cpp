@@ -269,20 +269,25 @@ int main(int argc, char *argv[])
 {
     int opt;
     int option_index = 0;
-    int correct_input = 0;
-    int aksforhelp = 0;
+    int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
     struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
+        {"json", no_argument, 0, 'j'},
         {0, 0, 0, 0}};
 
-    while ((opt = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
+    while ((opt = getopt_long(argc, argv, "hj", long_options, &option_index)) != -1)
     {
         switch (opt)
         {
         case 'h':
-            cout << "How to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\nProgramm developed by:\nNils Fleschhut, TIT23 (fleschhut.nils@gmail.com) \nLinus Gerlach, TIT23 (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23(philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum, TIT23(janu10.jn@gmail.com)"
+            cout << "\nHow to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\n\nPut -j ore --json as an argument for an example of a json file\n\nProgramm developed by:\nNils Fleschhut, TIT23 (fleschhut.nils@gmail.com) \nLinus Gerlach, TIT23 (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23(philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum, TIT23(janu10.jn@gmail.com)"
                  << "\n"; // Req1-3
-            aksforhelp = 1;
+            asksforhelp = 1;
+            break;
+        case 'j':
+            
+            cout << "{\n \"outputfile\": \"(Name).bat\",\n \"hideshell\": (false/true),\n \"entries\": [\n	{\"type\": \"EXE\",\"command\": \"C:\\sicherung\\tools\\MinGW\\set_distro_paths.bat\"},\n	{\"type\": \"ENV\", \"key\": \"BOOST_INCLUDEDIR\", \"value\": \"C:\\sicherung\\tools\\MinGW\\include\"},\n	{\"type\": \"PATH\", \"path\": \"C:\\sicherung\\tools\\MinGW\\bin\"}\n ],\n \"application\": null\n}\n";
+            asksforhelp = 1;
             break;
         default:
             cout << "-h or --help for help\n";
@@ -297,12 +302,13 @@ int main(int argc, char *argv[])
             fs::path filePath = fs::canonical(eingabe);
             cout << eingabe << " as input detected. Initiating parsing \n\n\n";
             JsonReader(filePath);
-            correct_input = 1; // Req 4-5 + 7
+            // Req 4-5 + 7
+        }
+        else if(asksforhelp == 0)
+        {
+          cout << "no fitting input detectet. -h or --help for further explanation\n";  
         }
     }
-    if (correct_input == 0 && aksforhelp == 0) // Req6
-    {
-        cout << "no fitting input detectet. -h or --help for further explanation\n";
-    }
+    
     return EXIT_SUCCESS;
 }
