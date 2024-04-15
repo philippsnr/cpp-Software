@@ -103,7 +103,12 @@ int JsonReader(fs::path filePath)
         cerr << "Error while parsing the JSON-file" << endl;
         return EXIT_FAILURE;
     }
-
+        for (const auto key : root.getMemberNames()) {
+        if (key != "outputfile" && key != "hideshell" && key != "entries" && key != "application") {
+            cerr << "Unknown key '" << key << "' in the JSON file. (LINE )" << endl;
+            return EXIT_FAILURE;
+        }
+    }
     // Werte aus JSON lesen
     // Outputfile überprüfen
     string outputfile = root["outputfile"].asString();
