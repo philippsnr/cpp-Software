@@ -33,8 +33,6 @@ public:
 class ENV : public Entry
 {
 public:
-    string key;
-    string value;
     ENV(string _key, string _value) : Entry("ENV")
     {
         key = _key;
@@ -44,33 +42,27 @@ public:
     {
         return "set " + key + "=" + value;
     }
-    string getData()
-    {
-        return "key: " + key + " , value: " + value;
-    }
+protected:
+    string key;
+    string value;
 };
 class EXE : public Entry
 {
 public:
-    string command;
     EXE(string _command) : Entry("EXE")
     {
         command = _command;
     }
-
     string getBatchCommand()
     {
         return command;
     }
-    string getData()
-    {
-        return command;
-    }
+protected:
+    string command;
 };
 class PATH : public Entry
 {
 public:
-    string path;
     PATH(string _path) : Entry("PATH")
     {
         path = _path;
@@ -79,10 +71,8 @@ public:
     {
         return path;
     }
-    string getData()
-    {
-        return path;
-    }
+protected:
+    string path;
 };
 
 int JsonReader(fs::path filePath)
@@ -102,12 +92,11 @@ int JsonReader(fs::path filePath)
         return EXIT_FAILURE;
     }
     cout << "JSON successfully parsed! \n\n";
-    string unknownKey;
     for (const auto key : root.getMemberNames())
     {
         if (key != "outputfile" && key != "hideshell" && key != "entries" && key != "application")
         {
-            unknownKey = key;
+            const string unknownKey = key;
             // JSON-Datei erneut öffnen, um die Zeile des unbekannten Schlüssels zu finden
             file.clear();            // Stream-Flags zurücksetzen
             file.seekg(0, ios::beg); // Zurück zum Anfang der Datei
@@ -361,7 +350,7 @@ int main(int argc, char *argv[])
         if (fs::exists(argv[i]))
         {
             string eingabe = argv[i];
-            fs::path filePath = fs::canonical(eingabe);
+            const fs::path filePath = fs::canonical(eingabe);
             cout << eingabe << " as input detected. Initiating parsing \n\n";
             JsonReader(filePath);
             // Req 4-5 + 7
