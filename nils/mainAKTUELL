@@ -175,10 +175,10 @@ int JsonReader(fs::path filePath)
     if (fs::exists(outputfile))
     {
         string choice;
-        cout << "There is already a batch-file with this filename. Do you want to continue or exit?\n";
+        cout << "There is already a batch-file with this filename. Do you want to overwrite or exit?\n";
         do
         {
-            cout << "Type \"1\" for continue or type \"2\" for exit \n";
+            cout << "Type \"1\" for overwrite or type \"2\" for exit \n";
             cout << "Your choice: ";
             cin >> choice;
             cout << endl << endl;
@@ -309,7 +309,7 @@ int JsonReader(fs::path filePath)
         {
             batchFile << " && \"";
         }
-        batchFile << "\" << application_path << "\"";
+        batchFile << "\"" << application_path << "\"";
     }
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
