@@ -1,0 +1,11 @@
+{
+	"outputfile": "Test_Linus.bat",
+	"hideshell": false,
+	"entries": [
+		{"type": "EXE", "command": "C:\\Test\\batch1.bat"},
+		{"type": "ENV", "key": "TEST_VARIABLE", "value": "C:\\Test"},
+		{"type": "PATH", "path": "C:\\Test"},
+		{"type": "PATH", "path": "E:\\Test"},
+	],
+	"application": "C:\\Programme(x86)\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe"
+}
