@@ -101,8 +101,7 @@ int JsonReader(fs::path filePath)
         cerr << reader.getFormattedErrorMessages();
         return EXIT_FAILURE;
     }
-    cout << "JSON successfully parsed ! \n";
-    cout << "Searching for unknown keys";
+    cout << "JSON successfully parsed! \n\n";
     string unknownKey;
     for (const auto key : root.getMemberNames())
     {
@@ -129,19 +128,34 @@ int JsonReader(fs::path filePath)
             return EXIT_FAILURE;
         }
     }
-    cout << "No unknown Keys found ! \n";
-    cout << "Initiating reading JSON \n";
+    cout << "Initiating reading JSON \n\n";
     // Werte aus JSON lesen
     // Outputfile überprüfen
     string outputfile = root["outputfile"].asString();
-    const string outputfileSUB = outputfile.substr(outputfile.length() - 4);
-    if (!(outputfile.length() >= 4 && outputfileSUB == ".bat"))
+   // const string outputfileSUB = outputfile.substr(outputfile.length() - 4);
+    //!(outputfile.length() >= 4 && outputfileSUB == ".bat")#
+    cout << outputfile;
+    if(outputfile.find("!") != string::npos || outputfile.find("!") != string::npos || outputfile.find("!") != string::npos || outputfile.find("!") == string::npos || outputfile.find("!") == string::npos ||outputfile.find("!") == string::npos ||outputfile.find("!") == string::npos ||outputfile.find("!") == string::npos ||outputfile.find("!") == string::npos)
     {
         string choice;
-        cout << "Error with outputfilename. (LINE X) \n Has to have '.bat'. Use -h for more Information" << '\n';
+        cout << "This outputfile contains symbol that might cause problems on windows! \n";
+        cout << "Do you want to continue (1) or exit (2)? \n";
+        do{
+        cout << "Your choice: ";
+        cin >> choice;
+        }while(choice != "1" && choice != "2");
+        if (choice == "2")
+        {
+            return EXIT_FAILURE;
+        }
+    }
+    if (outputfile.find(".bat") == string::npos)
+    {
+        string choice;
+        cout << "Error with outputfilename \nHas to have '.bat'. Use -h for more Information" << '\n';
         do
         {
-            cout << "\n\nDo you want us to add \".bat\" or exit the program ?" << '\n';
+            cout << "\nDo you want us to add \".bat\" or exit the program?" << '\n';
             cout << "Type \"1\" for adding \".bat\" or type \"2\" for exit" << '\n';
             cout << "Your choice: ";
             cin >> choice;
@@ -177,19 +191,17 @@ int JsonReader(fs::path filePath)
     //  hideshell überprüfen
     if (root["hideshell"].isBool() == false)
     {
-        cerr << "Error with variable hideshell: Wrong Value. (LINE ) \n Use -h for Help" << '\n';
+        cerr << "Error: Wrong/no Value for key \"hideshell\" \n Use -h for Help" << '\n';
         return EXIT_FAILURE;
     }
     const bool hideshell = root["hideshell"].asBool(); // Req9 abgeschlossen
     const string application_path = root["application"].asString();
-    if (application_path == "null" || application_path == "0")
+    if (application_path != "null" && application_path != "0")
     {
-        return EXIT_FAILURE;
+        const int index = application_path.rfind(92); /* 92 (ASCII-Code) = \ */
+        const int length = application_path.length();
+        const string application_name = application_path.substr(index + 1, length - index);
     }
-    // Name der Applikation rausfinden
-    const int index = application_path.rfind(92); /* 92 (ASCII-Code) = \ */
-    const int length = application_path.length();
-    const string application_name = application_path.substr(index + 1, length - index);
     // Req16 abgeschlossen
     //  Einträge aus JSON lesen
     const Json::Value entries_json = root["entries"];
@@ -237,8 +249,8 @@ int JsonReader(fs::path filePath)
         cout << "Type: " << entry->type << ", Data: " << entry->getData() << endl;
     }
     */
-   cout << "JSON successfully read ! \n";
-   cout << "Initiating Batch creation \n";
+    cout << "JSON successfully read! \n\n";
+    cout << "Initiating Batch creation \n\n";
     // Überprüfen, ob die Datei erfolgreich geöffnet wurde
     ofstream batchFile(outputfile);
 
@@ -294,7 +306,7 @@ int JsonReader(fs::path filePath)
     batchFile << "@echo off";
     // Datei schließen
     batchFile.close();
-    cout << "Batch successfully created ! \n";
+    cout << "Batch successfully created! \n\n";
     // Iteriere über den Vektor und lösche die Objekte
     for (auto entry : entries)
     {
@@ -302,7 +314,7 @@ int JsonReader(fs::path filePath)
     }
     // Lösche alle Einträge im Vektor
     entries.clear();
-    cout << "Programm ran successfully ! \n \n \n \n";
+    cout << "Programm ran successfully! \n \n \n \n";
     return EXIT_SUCCESS;
 }
 
@@ -336,7 +348,7 @@ int main(int argc, char *argv[])
         {
             string eingabe = argv[i];
             fs::path filePath = fs::canonical(eingabe);
-            cout << eingabe << " as input detected. Initiating parsing \n\n\n";
+            cout << eingabe << " as input detected. Initiating parsing \n\n";
             JsonReader(filePath);
             correct_input = 1; // Req 4-5 + 7
         }
