@@ -1,0 +1,7 @@
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/CMakeFiles/astyle.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/CMakeFiles/jsondemo.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/CMakeFiles/edit_cache.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/CMakeFiles/rebuild_cache.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/path/CMakeFiles/pathlib.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/path/CMakeFiles/edit_cache.dir
+/home/nils/Schreibtisch/C++Abgabe/jsoncpp/build/path/CMakeFiles/rebuild_cache.dir
