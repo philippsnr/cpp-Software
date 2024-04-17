@@ -264,7 +264,7 @@ int JsonReader(fs::path filePath)
     {
         if (entry->type == "EXE")
         {
-            batchFile << entry->getBatchCommand() << " && ";
+            batchFile << "\"" << entry->getBatchCommand() << "\"" << " && ";
         }
     }
     for (const auto entry : entries)
