@@ -25,10 +25,6 @@ public:
     {
         return "";
     }
-    virtual string getData()
-    {
-        return "";
-    }
 };
 class ENV : public Entry
 {
@@ -117,6 +113,7 @@ int JsonReader(fs::path filePath)
             return EXIT_FAILURE;
         }
     }
+    //Req17 abgeschlossen
     cout << "Initiating reading JSON \n\n";
     // Werte aus JSON lesen
     // Outputfile überprüfen
@@ -228,6 +225,7 @@ int JsonReader(fs::path filePath)
         cerr << "Error: entries: Not an Array. \n Use -h for Help" << endl;
         return EXIT_FAILURE;
     }
+    //Req10-15 abgeschlossen
     /*
     // Ausgabe der gespeicherten Informationen
     cout << "outputfile: " << outputfile << endl;
@@ -251,7 +249,7 @@ int JsonReader(fs::path filePath)
     }
     batchFile << "@echo on\r\n";                    // Req24
     batchFile << "C:\\Windows\\System32\\cmd.exe "; // Req18 abgeschlossen
-    if (hideshell == 0) //DABLEIBEN
+    if (hideshell == 0)
     {
         batchFile << "/k";
     }
@@ -259,6 +257,7 @@ int JsonReader(fs::path filePath)
     {
         batchFile << "/c";
     }
+    //Req19 abgeschlossen
     batchFile << " \"";
     for (const auto entry : entries)
     {
@@ -300,6 +299,7 @@ int JsonReader(fs::path filePath)
         }
         batchFile << "\"" << application_path << "\"";
     }
+    //Req25 abgeschlossen
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
     // Datei schließen
@@ -353,12 +353,13 @@ int main(int argc, char *argv[])
             const fs::path filePath = fs::canonical(eingabe);
             cout << eingabe << " as input detected. Initiating parsing \n\n";
             JsonReader(filePath);
-            // Req 4-5 + 7
+            // Req 4-5 + 7 abgeschlossen
         }
         else if(asksforhelp == 0)
         {
           cout << "no fitting input detectet. -h or --help for further explanation\n";  
         }
+        //Req6 abgeschlossen
     }
     
     return EXIT_SUCCESS;
