@@ -296,7 +296,7 @@ int JsonReader(fs::path filePath)
     {
         if (entries.empty() == false)
         {
-            batchFile << " && \"";
+            batchFile << " && ";
         }
         batchFile << "\"" << application_path << "\"";
     }
