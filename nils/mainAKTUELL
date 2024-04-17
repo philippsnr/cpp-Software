@@ -309,7 +309,7 @@ int JsonReader(fs::path filePath)
         {
             batchFile << " && \"";
         }
-        batchFile << application_path << "\"";
+        batchFile << "\" << application_path << "\"";
     }
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
