@@ -163,7 +163,7 @@ int JsonReader(fs::path filePath)
         } while (choice != "1" && choice != "2");
         if (choice == "1")
         {
-            cout << "We will add \".bat\" to your given outputfile \n";
+            cout << "We will add \".bat\" to your given outputfile \n\n";
             outputfile = outputfile.append(".bat");
         }
         else
@@ -181,6 +181,7 @@ int JsonReader(fs::path filePath)
             cout << "Type \"1\" for continue or type \"2\" for exit \n";
             cout << "Your choice: ";
             cin >> choice;
+            cout << endl << endl;
         } while (choice != "1" && choice != "2");
         if (choice == "2")
         {
@@ -304,7 +305,11 @@ int JsonReader(fs::path filePath)
     // Req20-23 abgeschlossen
     if (application_path != "null" && application_path != "0")
     {
-        batchFile << " && \"" << application_path << "\"";
+        if (entries.empty() == false)
+        {
+            batchFile << " && \"";
+        }
+        batchFile << application_path << "\"";
     }
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
