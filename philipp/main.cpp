@@ -31,6 +31,7 @@ public:
     {
         return "set " + key + "=" + value;
     }
+
 protected:
     string key;
     string value;
@@ -46,6 +47,7 @@ public:
     {
         return command;
     }
+
 protected:
     string command;
 };
@@ -60,32 +62,37 @@ public:
     {
         return path;
     }
+
 protected:
     string path;
 };
 
 int JsonConverter(fs::path filePath);
 int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries);
-fs::path* getOpt(int argc, char *argv[]);
-
+fs::path *getOpt(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
-{   
-    fs::path* filePath = getOpt(argc, argv);
-    if(!filePath.empty()) {
-        JsonConverter(filePath);
-        return EXIT_SUCCESS;
+{
+    fs::path *filePaths = getOpt(argc, argv);
+
+    if (filePaths != NULL)
+    {
+        for (int i = 0; i < argc; i++)
+        {
+            JsonConverter(filePaths[i]);
+        }
     }
     else {
         return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 }
 
-fs::path* getOpt(int argc, char *argv[]) 
+fs::path *getOpt(int argc, char *argv[])
 {
     int opt;
     int option_index = 0;
-    int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
+    int asksforhelp = 0; // Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
     struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"json", no_argument, 0, 'j'},
@@ -120,15 +127,14 @@ fs::path* getOpt(int argc, char *argv[])
             JSONpaths[i] = filePath;
             // Req 4-5 + 7 abgeschlossen
         }
-        else if(asksforhelp == 0)
+        else if (asksforhelp == 0)
         {
-          cout << "no fitting input detectet. -h or --help for further explanation\n";
-          return fs::canonical("");
+            cout << "no fitting input detectet. -h or --help for further explanation\n";
+            return NULL;
         }
-        //Req6 abgeschlossen
+        // Req6 abgeschlossen
     }
     return JSONpaths;
-    
 }
 
 int JsonConverter(fs::path filePath)
@@ -173,7 +179,7 @@ int JsonConverter(fs::path filePath)
             return EXIT_FAILURE;
         }
     }
-    //Req17 abgeschlossen
+    // Req17 abgeschlossen
     cout << "Initiating reading JSON \n\n";
     // Werte aus JSON lesen
     // Outputfile überprüfen
@@ -227,7 +233,8 @@ int JsonConverter(fs::path filePath)
             cout << "Type \"1\" for overwrite or type \"2\" for exit \n";
             cout << "Your choice: ";
             cin >> choice;
-            cout << endl << endl;
+            cout << endl
+                 << endl;
         } while (choice != "1" && choice != "2");
         if (choice == "2")
         {
@@ -285,7 +292,7 @@ int JsonConverter(fs::path filePath)
         cerr << "Error: entries: Not an Array. \n Use -h for Help" << endl;
         return EXIT_FAILURE;
     }
-    //Req10-15 abgeschlossen
+    // Req10-15 abgeschlossen
     cout << "JSON successfully read! \n\n";
     cout << "Initiating Batch creation \n\n";
 
@@ -304,7 +311,7 @@ int JsonConverter(fs::path filePath)
 
 int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries)
 {
-        // Überprüfen, ob die Datei erfolgreich geöffnet wurde
+    // Überprüfen, ob die Datei erfolgreich geöffnet wurde
     ofstream batchFile(outputfile);
 
     if (!batchFile.is_open())
@@ -322,13 +329,14 @@ int MakeBatch(string outputfile, bool hideshell, string application_path, vector
     {
         batchFile << "/c";
     }
-    //Req19 abgeschlossen
+    // Req19 abgeschlossen
     batchFile << " \"";
     for (const auto entry : entries)
     {
         if (entry->type == "EXE")
         {
-            batchFile << "\"" << entry->getBatchCommand() << "\"" << " && ";
+            batchFile << "\"" << entry->getBatchCommand() << "\""
+                      << " && ";
         }
     }
     for (const auto entry : entries)
@@ -364,12 +372,12 @@ int MakeBatch(string outputfile, bool hideshell, string application_path, vector
         }
         batchFile << "\"" << application_path << "\"";
     }
-    //Req25 abgeschlossen
+    // Req25 abgeschlossen
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
     // Datei schließen
     batchFile.close();
     cout << "Batch successfully created! \n\n";
-    
+
     return EXIT_SUCCESS;
 }
