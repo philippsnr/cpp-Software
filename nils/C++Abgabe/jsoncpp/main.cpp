@@ -9,11 +9,11 @@
 #include <fstream>
 #include <filesystem>
 #include <getopt.h>
+#include <jsoncpp/json/json.h>
+
 using namespace std;
 
 namespace fs = std::filesystem;
-
-#include <jsoncpp/json/json.h>
 
 class Entry
 {
@@ -71,6 +71,57 @@ protected:
     string path;
 };
 
+int JsonReader(fs::path filePath);
+int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries);
+
+
+int main(int argc, char *argv[])
+{
+    int opt;
+    int option_index = 0;
+    int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
+    struct option long_options[] = {
+        {"help", no_argument, 0, 'h'},
+        {"json", no_argument, 0, 'j'},
+        {0, 0, 0, 0}};
+
+    while ((opt = getopt_long(argc, argv, "hj", long_options, &option_index)) != -1)
+    {
+        switch (opt)
+        {
+        case 'h':
+            cout << "\nHow to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\n\nPut -j ore --json as an argument for an example of a json file\n\nProgramm developed by:\nNils Fleschhut,     TIT23, (fleschhut.nils@gmail.com) \nLinus Gerlach,      TIT23, (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23, (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum,      TIT23, (janu10.jn@gmail.com)\n"
+                 << "\n"; // Req1-3
+            asksforhelp = 1;
+            break;
+        case 'j':
+            cout << "{\n \"outputfile\": \"(Name).bat\",\n \"hideshell\": (false/true),\n \"entries\": [\n	{\"type\": \"EXE\",\"command\": \"C:\\sicherung\\tools\\MinGW\\set_distro_paths.bat\"},\n	{\"type\": \"ENV\", \"key\": \"BOOST_INCLUDEDIR\", \"value\": \"C:\\sicherung\\tools\\MinGW\\include\"},\n	{\"type\": \"PATH\", \"path\": \"C:\\sicherung\\tools\\MinGW\\bin\"}\n ],\n \"application\": \"C:\\sicherung\\tools\\VSCode\"\n}\n";
+            asksforhelp = 1;
+            break;
+        default:
+            cout << "-h or --help for help\n";
+            break;
+        }
+    }
+    for (int i = 1; i < argc; i++)
+    {
+        if (fs::exists(argv[i]))
+        {
+            string eingabe = argv[i];
+            const fs::path filePath = fs::canonical(eingabe);
+            cout << eingabe << " as input detected. Initiating parsing \n\n";
+            JsonReader(filePath);
+            // Req 4-5 + 7 abgeschlossen
+        }
+        else if(asksforhelp == 0)
+        {
+          cout << "no fitting input detectet. -h or --help for further explanation\n";  
+        }
+        //Req6 abgeschlossen
+    }
+    return EXIT_SUCCESS;
+}
+
 int JsonReader(fs::path filePath)
 {
     // Vector für Einträge aus entries
@@ -80,6 +131,7 @@ int JsonReader(fs::path filePath)
     ifstream file(filePath);
     Json::Reader reader;
     Json::Value root;
+
     // JSON parsen
     if (!reader.parse(file, root))
     {
@@ -226,20 +278,25 @@ int JsonReader(fs::path filePath)
         return EXIT_FAILURE;
     }
     //Req10-15 abgeschlossen
-    /*
-    // Ausgabe der gespeicherten Informationen
-    cout << "outputfile: " << outputfile << endl;
-    cout << "hideshell: " << hideshell << endl;
-    cout << "application: " << application_name << " path: " << application_path << endl;
-    cout << "entries:" << endl;
-    for (const auto &entry : entries)
-    {
-        cout << "Type: " << entry->type << ", Data: " << entry->getData() << endl;
-    }
-    */
     cout << "JSON successfully read! \n\n";
     cout << "Initiating Batch creation \n\n";
-    // Überprüfen, ob die Datei erfolgreich geöffnet wurde
+
+    MakeBatch(outputfile, hideshell, application_path, entries);
+
+    // Iteriere über den Vektor und lösche die Objekte
+    for (auto entry : entries)
+    {
+        delete entry;
+    }
+    // Lösche alle Einträge im Vektor
+    entries.clear();
+    cout << "Programm ran successfully! \n \n \n \n";
+    return EXIT_SUCCESS;
+}
+
+int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries)
+{
+        // Überprüfen, ob die Datei erfolgreich geöffnet wurde
     ofstream batchFile(outputfile);
 
     if (!batchFile.is_open())
@@ -305,62 +362,6 @@ int JsonReader(fs::path filePath)
     // Datei schließen
     batchFile.close();
     cout << "Batch successfully created! \n\n";
-    // Iteriere über den Vektor und lösche die Objekte
-    for (auto entry : entries)
-    {
-        delete entry;
-    }
-    // Lösche alle Einträge im Vektor
-    entries.clear();
-    cout << "Programm ran successfully! \n \n \n \n";
-    return EXIT_SUCCESS;
-}
-
-int main(int argc, char *argv[])
-{
-    int opt;
-    int option_index = 0;
-    int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
-    struct option long_options[] = {
-        {"help", no_argument, 0, 'h'},
-        {"json", no_argument, 0, 'j'},
-        {0, 0, 0, 0}};
-
-    while ((opt = getopt_long(argc, argv, "hj", long_options, &option_index)) != -1)
-    {
-        switch (opt)
-        {
-        case 'h':
-            cout << "\nHow to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\n\nPut -j ore --json as an argument for an example of a json file\n\nProgramm developed by:\nNils Fleschhut,     TIT23, (fleschhut.nils@gmail.com) \nLinus Gerlach,      TIT23, (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23, (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum,      TIT23, (janu10.jn@gmail.com)\n"
-                 << "\n"; // Req1-3
-            asksforhelp = 1;
-            break;
-        case 'j':
-            
-            cout << "{\n \"outputfile\": \"(Name).bat\",\n \"hideshell\": (false/true),\n \"entries\": [\n	{\"type\": \"EXE\",\"command\": \"C:\\sicherung\\tools\\MinGW\\set_distro_paths.bat\"},\n	{\"type\": \"ENV\", \"key\": \"BOOST_INCLUDEDIR\", \"value\": \"C:\\sicherung\\tools\\MinGW\\include\"},\n	{\"type\": \"PATH\", \"path\": \"C:\\sicherung\\tools\\MinGW\\bin\"}\n ],\n \"application\": \"C:\\sicherung\\tools\\VSCode\"\n}\n";
-            asksforhelp = 1;
-            break;
-        default:
-            cout << "-h or --help for help\n";
-            break;
-        }
-    }
-    for (int i = 1; i < argc; i++)
-    {
-        if (fs::exists(argv[i]))
-        {
-            string eingabe = argv[i];
-            const fs::path filePath = fs::canonical(eingabe);
-            cout << eingabe << " as input detected. Initiating parsing \n\n";
-            JsonReader(filePath);
-            // Req 4-5 + 7 abgeschlossen
-        }
-        else if(asksforhelp == 0)
-        {
-          cout << "no fitting input detectet. -h or --help for further explanation\n";  
-        }
-        //Req6 abgeschlossen
-    }
     
     return EXIT_SUCCESS;
 }
