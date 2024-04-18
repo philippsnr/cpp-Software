@@ -1,10 +1,3 @@
-// Erstellen des Programm
-// mkdir build
-// cd build
-// cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..
-// ninja
-// Alternativ diesen Ordner mit VSCode oeffnen
-
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -73,13 +66,13 @@ protected:
 
 int JsonConverter(fs::path filePath);
 int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries);
-fs::path getOpt(int argc, char *argv[]);
+fs::path* getOpt(int argc, char *argv[]);
 
 
 int main(int argc, char *argv[])
 {   
-    fs::path filePath = getOpt(argc, argv);
-    if(filePath) {
+    fs::path* filePath = getOpt(argc, argv);
+    if(!filePath.empty()) {
         JsonConverter(filePath);
         return EXIT_SUCCESS;
     }
@@ -88,7 +81,8 @@ int main(int argc, char *argv[])
     }
 }
 
-fs::path getOpt(int argc, char *argv[]) {
+fs::path* getOpt(int argc, char *argv[]) 
+{
     int opt;
     int option_index = 0;
     int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
@@ -103,7 +97,7 @@ fs::path getOpt(int argc, char *argv[]) {
         {
         case 'h':
             cout << "\nHow to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\n\nPut -j ore --json as an argument for an example of a json file\n\nProgramm developed by:\nNils Fleschhut,     TIT23, (fleschhut.nils@gmail.com) \nLinus Gerlach,      TIT23, (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23, (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum,      TIT23, (janu10.jn@gmail.com)\n"
-                 << "\n"; // Req1-3
+                 << "\n"; // Req1-3 abgeschlossen
             asksforhelp = 1;
             break;
         case 'j':
@@ -115,6 +109,7 @@ fs::path getOpt(int argc, char *argv[]) {
             break;
         }
     }
+    fs::path JSONpaths[argc];
     for (int i = 1; i < argc; i++)
     {
         if (fs::exists(argv[i]))
@@ -122,16 +117,18 @@ fs::path getOpt(int argc, char *argv[]) {
             string eingabe = argv[i];
             const fs::path filePath = fs::canonical(eingabe);
             cout << eingabe << " as input detected. Initiating parsing \n\n";
-            return filePath;
+            JSONpaths[i] = filePath;
             // Req 4-5 + 7 abgeschlossen
         }
         else if(asksforhelp == 0)
         {
-          cout << "no fitting input detectet. -h or --help for further explanation\n"; 
-          return NULL; 
+          cout << "no fitting input detectet. -h or --help for further explanation\n";
+          return fs::canonical("");
         }
         //Req6 abgeschlossen
     }
+    return JSONpaths;
+    
 }
 
 int JsonConverter(fs::path filePath)
