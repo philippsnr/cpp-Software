@@ -1,10 +1,3 @@
-// Erstellen des Programm
-// mkdir build
-// cd build
-// cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..
-// ninja
-// Alternativ diesen Ordner mit VSCode oeffnen
-
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -38,6 +31,7 @@ public:
     {
         return "set " + key + "=" + value;
     }
+
 protected:
     string key;
     string value;
@@ -53,6 +47,7 @@ public:
     {
         return command;
     }
+
 protected:
     string command;
 };
@@ -67,19 +62,26 @@ public:
     {
         return path;
     }
+
 protected:
     string path;
 };
 
-int JsonReader(fs::path filePath);
+int JsonConverter(fs::path filePath);
 int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries);
-
+int getOpt(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
+    getOpt(argc, argv);
+    return EXIT_SUCCESS;
+}
+
+int getOpt(int argc, char *argv[])
+{
     int opt;
     int option_index = 0;
-    int asksforhelp = 0;  //Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
+    int asksforhelp = 0; // Um zu verhindern das er sagt "no fitting input ... " auch wenn man nur die optionen eingibt
     struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"json", no_argument, 0, 'j'},
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
         {
         case 'h':
             cout << "\nHow to use: provide the file path (absolut/relativ) or link to the JSON file as an argument.\nExample: ./jsondemo /Path/To/Your/File.json\n\nPut -j ore --json as an argument for an example of a json file\n\nProgramm developed by:\nNils Fleschhut,     TIT23, (fleschhut.nils@gmail.com) \nLinus Gerlach,      TIT23, (li.gerlach@freenet.de) \nPhillip Staudinger, TIK23, (philipp.eckhard.staudinger@gmail.com) \nJanne Nußbaum,      TIT23, (janu10.jn@gmail.com)\n"
-                 << "\n"; // Req1-3
+                 << "\n"; // Req1-3 abgeschlossen
             asksforhelp = 1;
             break;
         case 'j':
@@ -109,20 +111,22 @@ int main(int argc, char *argv[])
         {
             string eingabe = argv[i];
             const fs::path filePath = fs::canonical(eingabe);
-            cout << eingabe << " as input detected. Initiating parsing \n\n";
-            JsonReader(filePath);
+            cout << "-------------------------------------------------------------------\n";
+            cout << "\"" << eingabe << "\" as input detected\n\nInitiating parsing \n\n";
+            JsonConverter(filePath);
+            cout << "-------------------------------------------------------------------\n";
             // Req 4-5 + 7 abgeschlossen
         }
-        else if(asksforhelp == 0)
+        else if (asksforhelp == 0)
         {
-          cout << "no fitting input detectet. -h or --help for further explanation\n";  
+            cout << i << ". input doesnt exist. -h or --help for further explanation\n\n";
         }
-        //Req6 abgeschlossen
+        // Req6 abgeschlossen
     }
     return EXIT_SUCCESS;
 }
 
-int JsonReader(fs::path filePath)
+int JsonConverter(fs::path filePath)
 {
     // Vector für Einträge aus entries
     vector<Entry *> entries;
@@ -137,6 +141,7 @@ int JsonReader(fs::path filePath)
     {
         cerr << "Error while parsing the JSON-file" << endl;
         cerr << reader.getFormattedErrorMessages();
+        cerr << "\n\n";
         return EXIT_FAILURE;
     }
     cout << "JSON successfully parsed! \n\n";
@@ -165,7 +170,7 @@ int JsonReader(fs::path filePath)
             return EXIT_FAILURE;
         }
     }
-    //Req17 abgeschlossen
+    // Req17 abgeschlossen
     cout << "Initiating reading JSON \n\n";
     // Werte aus JSON lesen
     // Outputfile überprüfen
@@ -175,7 +180,7 @@ int JsonReader(fs::path filePath)
     if (outputfile.find("/") != string::npos || outputfile.find(92) != string::npos || outputfile.find("<") != string::npos || outputfile.find(">") != string::npos || outputfile.find(":") != string::npos || outputfile.find("*") != string::npos || outputfile.find("?") != string::npos || outputfile.find("\"") != string::npos || outputfile.find("|") != string::npos)
     {
         string choice;
-        cout << "This outputfile contains symbol that might cause problems on windows! \n";
+        cout << "The name of outputfile contains symbol that might cause problems on windows! \n";
         cout << "Do you want to continue (1) or exit (2)? \n";
         do
         {
@@ -219,7 +224,8 @@ int JsonReader(fs::path filePath)
             cout << "Type \"1\" for overwrite or type \"2\" for exit \n";
             cout << "Your choice: ";
             cin >> choice;
-            cout << endl << endl;
+            cout << endl
+                 << endl;
         } while (choice != "1" && choice != "2");
         if (choice == "2")
         {
@@ -240,6 +246,7 @@ int JsonReader(fs::path filePath)
         const int index = application_path.rfind(92); /* 92 (ASCII-Code) = \ */
         const int length = application_path.length();
         const string application_name = application_path.substr(index + 1, length - index);
+        cout << "application name: " << application_name << endl;
     }
     // Req16 abgeschlossen
     //  Einträge aus JSON lesen
@@ -251,19 +258,44 @@ int JsonReader(fs::path filePath)
             string type = entry_json["type"].asString();
             if (type == "EXE")
             {
+                if (entry_json["command"].isNull())
+                {
+                    cerr << "Entry with type \"EXE\" found without key \"command\"\n";
+                    return EXIT_FAILURE;
+                }
                 string command = entry_json["command"].asString();
                 entries.push_back(new EXE(command));
             }
             else if (type == "ENV")
             {
+                if (entry_json["key"].isNull())
+                {
+                    cerr << "Entry with type \"ENV\" found without key \"key\"\n";
+                    return EXIT_FAILURE;
+                }
+                if (entry_json["value"].isNull())
+                {
+                    cerr << "Entry with type \"ENV\" found without key \"value\"\n";
+                    return EXIT_FAILURE;
+                }
                 string key = entry_json["key"].asString();
                 string value = entry_json["value"].asString();
                 entries.push_back(new ENV(key, value));
             }
             else if (type == "PATH")
             {
+                if (entry_json["path"].isNull())
+                {
+                    cerr << "Entry with type \"PATH\" found without key \"path\"\n";
+                    return EXIT_FAILURE;
+                }
                 string path = entry_json["path"].asString();
                 entries.push_back(new PATH(path));
+            }
+            else if (type.empty())
+            {
+                cerr << "Entry found with no type. Use -h for Help" << '\n';
+                return EXIT_FAILURE;
             }
             else
             {
@@ -277,7 +309,7 @@ int JsonReader(fs::path filePath)
         cerr << "Error: entries: Not an Array. \n Use -h for Help" << endl;
         return EXIT_FAILURE;
     }
-    //Req10-15 abgeschlossen
+    // Req10-15 abgeschlossen
     cout << "JSON successfully read! \n\n";
     cout << "Initiating Batch creation \n\n";
 
@@ -290,13 +322,12 @@ int JsonReader(fs::path filePath)
     }
     // Lösche alle Einträge im Vektor
     entries.clear();
-    cout << "Programm ran successfully! \n \n \n \n";
     return EXIT_SUCCESS;
 }
 
 int MakeBatch(string outputfile, bool hideshell, string application_path, vector<Entry *> entries)
 {
-        // Überprüfen, ob die Datei erfolgreich geöffnet wurde
+    // Überprüfen, ob die Datei erfolgreich geöffnet wurde
     ofstream batchFile(outputfile);
 
     if (!batchFile.is_open())
@@ -314,13 +345,14 @@ int MakeBatch(string outputfile, bool hideshell, string application_path, vector
     {
         batchFile << "/c";
     }
-    //Req19 abgeschlossen
+    // Req19 abgeschlossen
     batchFile << " \"";
     for (const auto entry : entries)
     {
         if (entry->type == "EXE")
         {
-            batchFile << "\"" << entry->getBatchCommand() << "\"" << " && ";
+            batchFile << "\"" << entry->getBatchCommand() << "\""
+                      << " && ";
         }
     }
     for (const auto entry : entries)
@@ -356,12 +388,12 @@ int MakeBatch(string outputfile, bool hideshell, string application_path, vector
         }
         batchFile << "\"" << application_path << "\"";
     }
-    //Req25 abgeschlossen
+    // Req25 abgeschlossen
     batchFile << "\" \r\n"; // Req24
     batchFile << "@echo off";
     // Datei schließen
     batchFile.close();
     cout << "Batch successfully created! \n\n";
-    
+
     return EXIT_SUCCESS;
 }
